@@ -14,10 +14,10 @@ class AnimatedContainerApp extends StatefulWidget {
 }
 
 class _AnimatedContainerAppState extends State<AnimatedContainerApp> {
-  late double _width = 50;
-  late double _height = 50;
-  late Color _color = Colors.green;
-  late BorderRadiusGeometry _borderRadius = BorderRadius.circular(8);
+  double _width = 50;
+  double _height = 50;
+  Color _color = Colors.green;
+  BorderRadiusGeometry _borderRadius = BorderRadius.circular(8);
 
   @override
   Widget build(BuildContext context) {
