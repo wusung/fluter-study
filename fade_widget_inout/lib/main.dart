@@ -16,10 +16,7 @@ class MyApp extends StatelessWidget {
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({
-    super.key,
-    required this.title
-  });
+  const MyHomePage({super.key, required this.title});
 
   final String title;
 
@@ -38,14 +35,13 @@ class _MyHomePageState extends State<MyHomePage> {
       ),
       body: Center(
         child: AnimatedOpacity(
-          opacity: _visible ? 1.0 : 0,
-          duration: const Duration(milliseconds: 500),
-          child: Container(
-                width: 200.0,
-                height: 200.0,
-                color: Colors.green,
-          )
-        ),
+            opacity: _visible ? 1.0 : 0,
+            duration: const Duration(milliseconds: 500),
+            child: Container(
+              width: 200.0,
+              height: 200.0,
+              color: Colors.green,
+            )),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
