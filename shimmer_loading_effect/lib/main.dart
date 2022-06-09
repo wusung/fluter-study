@@ -147,15 +147,53 @@ const _shimmerGradient = LinearGradient(
 );
 
 class ShimmerLoadingState extends State<ShimmerLoading> {
+  Listenable? _shimmerChanges;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_shimmerChanges != null) {
+      _shimmerChanges!.removeListener(_onShimmerChange);
+    }
+    _shimmerChanges = Shimmer.of(context)?.shimmerChanges;
+    if (_shimmerChanges != null) {
+      _shimmerChanges!.addListener(_onShimmerChange);
+    }
+  }
+
+  void _onShimmerChange() {
+    if (!widget.isLoading) {
+      setState(() {});
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (widget.isLoading) {
+    if (!widget.isLoading) {
       return widget.child;
     }
+
+    final shimmer = Shimmer.of(context);
+    if (!shimmer!.isSized) {
+      return const SizedBox();
+    }
+    final shimmerSize = shimmer.size;
+    final gradient = shimmer.gradient;
+    final offsetWithinShimmer = shimmer.getDescendantOffset(
+      descendant: context.findRenderObject() as RenderBox,
+    );
+
     return ShaderMask(
       blendMode: BlendMode.srcATop,
       shaderCallback: (bounds) {
-        return _shimmerGradient.createShader(bounds);
+        return gradient.createShader(
+          Rect.fromLTWH(
+            -offsetWithinShimmer.dx,
+            -offsetWithinShimmer.dy,
+            shimmerSize.width,
+            shimmerSize.height,
+          ),
+        );
       },
       child: widget.child,
     );
@@ -181,12 +219,29 @@ class Shimmer extends StatefulWidget {
   State<StatefulWidget> createState() => ShimmerState();
 }
 
-class ShimmerState extends State<Shimmer> {
+class ShimmerState extends State<Shimmer> with SingleTickerProviderStateMixin {
+  late AnimationController _shimmerController;
+
+  @override
+  void initState() {
+    super.initState();
+    _shimmerController = AnimationController.unbounded(vsync: this)
+      ..repeat(min: -0.5, max: 1.5, period: const Duration(milliseconds: 1000));
+  }
+
+  @override
+  void dispose() {
+    _shimmerController.dispose();
+    super.dispose();
+  }
+
   Gradient get gradient => LinearGradient(
         colors: widget.linearGradient.colors,
         stops: widget.linearGradient.stops,
         begin: widget.linearGradient.begin,
         end: widget.linearGradient.end,
+        transform:
+            SlidingGradientTransform(slidePercent: _shimmerController.value),
       );
 
   bool get isSized => (context.findRenderObject() as RenderBox).hasSize;
@@ -201,9 +256,24 @@ class ShimmerState extends State<Shimmer> {
     return descendant.localToGlobal(offset, ancestor: shimmerBox);
   }
 
+  Listenable get shimmerChanges => _shimmerController;
+
   @override
   Widget build(BuildContext context) {
     return widget.child ?? const SizedBox();
+  }
+}
+
+class SlidingGradientTransform extends GradientTransform {
+  final double slidePercent;
+
+  const SlidingGradientTransform({
+    required this.slidePercent,
+  });
+
+  @override
+  Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
+    return Matrix4.translationValues(bounds.width * slidePercent, 0.0, 0.0);
   }
 }
 
